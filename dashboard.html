@@ -1,0 +1,67 @@
+<html>
+<head>
+<link href="/leagues.css" rel="stylesheet" type="text/css">	<title>Login</title>
+	<style type="text/css">
+		H5 {page-break-before: always}
+	</style>
+</head>
+<body>
+
+<!-- InstanceBegin template="/Templates/leagues_2.dwt" codeOutsideHTMLIsLocked="false" -->
+ <table align="center" class="maintable">
+    <tr>
+        <td colspan="3" bgcolor="#996600" height="1"></td>
+    </tr>
+    <tr class="noprint">
+        <td width="25%"><img src="../../logo.gif" width="361" height="77" /></td>
+        <td colspan="2" align="right"><p>&nbsp;&lt; <a href="http://amsterdambilliards.com">Back to Amsterdam home<br />
+                </a>&lt; <a href="../../index.php">Back to Leagues home</a></p></td>
+    </tr>
+    <tr>
+        <td colspan="3" bgcolor="#996600" height="1"></td>
+    </tr>
+    <tr>
+        <td colspan="3" align="center"><!-- InstanceBeginEditable name="content" -->
+            <table>
+                <tr>
+                    <td>                        <H3>Welcome to the Amsterdam Billiards League Information site</H3>
+                                                Please log in using your established username / password<br />
+                        <br />
+                        <table>
+                            <form action="login.php" method="POST">
+                                                                <tr>
+                                    <td>Username:</td>
+                                    <td><input type="text" name="user" /></td>
+                                </tr>
+                                                                <tr>
+                                    <td>Password:</td>
+                                    <td><input type="password" name="pwd" /></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td class="center"><input type="submit" value="Ok" /></td>
+                                </tr>
+                                <input type="hidden" name="redirect_url" value="/team9ball/abc/index.php" />
+                                <input type="hidden" name="action" value="LOGIN" />
+                            </form>
+                        </table>
+                        <form action="login.php" method="POST">
+                            <h4>Forget your password?</h4>
+                            Enter your e-mail or username here to reset it:
+                            <input type="text" name="email" size=20 />
+                            <input type="hidden" name="action" value="RESETPASSWORD" />
+                            <input type="submit" value="Ok" />
+                            <br />
+                        </form>
+                        <h4>Can't log in? Take a look at our <a href="faq.php">FAQ</a></h4></td>
+                </tr>
+            </table>
+            <!-- InstanceEndEditable --></td>
+    </tr>
+    <tr>
+        <td colspan="3">&nbsp;</td>
+    </tr>
+</table>
+ </body>
+</html>
+<!-- InstanceEnd -->
