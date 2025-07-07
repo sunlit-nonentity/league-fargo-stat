@@ -55,7 +55,7 @@ Next phases:
 
 ### Project Structure (Local Prototype)
 
-'''bash
+```bash
 PoolRatingScraper/
 ├── cli_interface.py
 ├── scraper.py
