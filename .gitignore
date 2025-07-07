@@ -1,0 +1,39 @@
+#Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.env
+
+# SQLite / local database files
+*.db
+*.sqlite3
+
+# Logs and system files
+*.log
+.DS_Store
+Thumbs.db
+
+# Editor settings
+.vscode/
+.idea/
+
+# Output/exports
+*.csv
+*.xlsx
+exports/
+reports/
+
+# AWS credentials (if ever accidentally stored locally)
+*.pem
+.aws/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+
+# Node modules (if using TypeScript frontend later)
+node_modules/
