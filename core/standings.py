@@ -1,30 +1,18 @@
 from bs4 import BeautifulSoup
 
-def get_standings(session):
-    url = "https://leagues3.amsterdambilliards.com/team9ball/abc/individual_standings.php?foo=bar"
-    response = session.get(url)
+def get_team_id_from_standings(session, standings_url, team_name):
+    response = session.get(standings_url)
     soup = BeautifulSoup(response.text, "html.parser")
-
-    table = soup.find("table", class_="tableteir2")
-    if not table:
-        print("❌ Could not find standings table.")
-        return []
-
-    players = []
-    rows = table.find_all("tr")[1:]  # skip header row
-
-    for row in rows:
-        cols = [col.get_text(strip=True) for col in row.find_all("td")]
-        if len(cols) >= 6:
-            player = {
-                "name": cols[0],
-                "team": cols[1],
-                "matches_played": int(cols[2]),
-                "racks_won": int(cols[3]),
-                "racks_lost": int(cols[4]),
-                "win_percentage": float(cols[5].replace("%", ""))
-            }
-            players.append(player)
-
-    print(f"📊 Parsed {len(players)} players from standings.")
-    return players
+    
+    for a in soup.find_all("a", href=True):
+        link_text = a.get_text(strip=True)
+        if (
+            "team_scouting_report.php" in a["href"]
+            and link_text
+            and team_name.lower() in link_text.lower()
+        ):
+            href = a["href"]
+            if "team_id=" in href:
+                return href.split("team_id=")[-1]
+    
+    return None

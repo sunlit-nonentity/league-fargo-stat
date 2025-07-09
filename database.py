@@ -4,94 +4,68 @@ def init_db():
     conn = sqlite3.connect("league_stats.db")
     c = conn.cursor()
 
-    # players table
     c.execute('''
         CREATE TABLE IF NOT EXISTS players (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            rank INTEGER,
-            name TEXT,
-            class TEXT,
-            t_h INTEGER,
-            dbs INTEGER,
-            game_wins INTEGER,
-            game_losses INTEGER,
-            game_total INTEGER,
-            match_wins INTEGER,
-            match_losses INTEGER,
-            match_total INTEGER
+            name TEXT PRIMARY KEY,
+            team TEXT,
+            matches_played INTEGER,
+            racks_won INTEGER,
+            racks_lost INTEGER,
+            win_percentage REAL
         )
     ''')
 
-    # matches table
     c.execute('''
         CREATE TABLE IF NOT EXISTS matches (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            week INTEGER,
+            date TEXT,
+            team1 TEXT,
+            team2 TEXT,
             player TEXT,
             opponent TEXT,
             player_racks INTEGER,
             opponent_racks INTEGER,
-            team_name TEXT,
-            opponent_team TEXT,
-            team_racks INTEGER,
-            opponent_team_racks INTEGER
+            UNIQUE(date, team1, team2, player, opponent, player_racks, opponent_racks)
         )
     ''')
 
     conn.commit()
-    conn.close()
+    return conn
 
-def insert_players(players):
-    conn = sqlite3.connect("league_stats.db")
+def insert_players(conn, players):
     c = conn.cursor()
-
+    inserted = 0
     for p in players:
-        c.execute('''
-            INSERT INTO players (
-                rank, name, class, t_h, dbs,
-                game_wins, game_losses, game_total,
-                match_wins, match_losses, match_total
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            int(p["rank"] or 0),
-            p["name"],
-            p["class"],
-            int(p["t_h"] or 0),
-            int(p["dbs"] or 0),
-            int(p["game_wins"] or 0),
-            int(p["game_losses"] or 0),
-            int(p["game_total"] or 0),
-            int(p["match_wins"] or 0),
-            int(p["match_losses"] or 0),
-            int(p["match_total"] or 0)
-        ))
+        try:
+            c.execute("INSERT OR IGNORE INTO players VALUES (?, ?, ?, ?, ?, ?)", (
+                p["name"], p["team"], int(p["matches_played"]),
+                int(p["racks_won"]), int(p["racks_lost"]),
+                float(p["win_percentage"])
+            ))
+            inserted += c.rowcount
+        except Exception as e:
+            print(f"Error inserting player {p['name']}: {e}")
 
     conn.commit()
-    conn.close()
-    print(f"✅ Inserted {len(players)} players into the database.")
+    return inserted
 
-def insert_matches(matches):
-    conn = sqlite3.connect("league_stats.db")
+def insert_matches(conn, matches):
     c = conn.cursor()
-
+    inserted = 0
     for m in matches:
-        c.execute('''
-            INSERT INTO matches (
-                week, player, opponent, player_racks, opponent_racks,
-                team_name, opponent_team, team_racks, opponent_team_racks
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            m["week"],
-            m["player"],
-            m["opponent"],
-            m["player_racks"],
-            m["opponent_racks"],
-            m["team_name"],
-            m["opponent_team"],
-            m["team_racks"],
-            m["opponent_team_racks"]
-        ))
+        try:
+            c.execute('''
+                INSERT OR IGNORE INTO matches
+                (date, team1, team2, player, opponent, player_racks, opponent_racks)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                m["date"], m["team1"], m["team2"],
+                m["player"], m["opponent"],
+                m["player_racks"], m["opponent_racks"]
+            ))
+            inserted += c.rowcount
+        except Exception as e:
+            print(f"Error inserting match {m['player']} vs {m['opponent']}: {e}")
 
     conn.commit()
-    conn.close()
-    print(f"✅ Inserted {len(matches)} matches into the database.")
+    return inserted

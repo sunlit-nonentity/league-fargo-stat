@@ -1,13 +1,5 @@
-import re
 import requests
 from bs4 import BeautifulSoup
-
-def get_team_scouting_url(dashboard_html: str, team_name: str):
-    soup = BeautifulSoup(dashboard_html, "html.parser")
-    link = soup.find("a", string=team_name)
-    if link:
-        return "https://leagues3.amsterdambilliards.com" + link["href"]
-    return None
 
 def get_match_history(session: requests.Session, scouting_url: str):
     response = session.get(scouting_url)
@@ -17,42 +9,52 @@ def get_match_history(session: requests.Session, scouting_url: str):
     matches = []
 
     for table in tables:
-        header = table.find_previous("h4")
-        if not header:
-            continue
-        header_text = header.get_text(strip=True)
-
-        # Extract date and teams from header like: "Nine Of Diamonds vs. Opponent - June 1, 2025"
-        match = re.search(r"(.+?) vs. (.+?) - (.+)", header_text)
-        if not match:
+        rows = table.find_all("tr")
+        if len(rows) < 2:
             continue
 
-        team1, team2, date = match.groups()
+        # extract team names and date from the first row
+        header_cells = rows[0].find_all("td")
+        if len(header_cells) < 2:
+            continue
 
-        rows = table.find_all("tr")[1:]  # skip header
-        for row in rows:
+        team_info = header_cells[0].get_text(strip=True)
+        date = header_cells[-1].get_text(strip=True)
+
+        if " vs. " not in team_info:
+            continue
+
+        team1, team2 = team_info.split(" vs. ")
+
+        # skip the header row and parse each matchup
+        for row in rows[2:]:
             cols = row.find_all("td")
-            if len(cols) < 3:
+            if len(cols) != 6:
                 continue
 
             player = cols[0].get_text(strip=True)
-            opponent = cols[1].get_text(strip=True)
-            score = cols[2].get_text(strip=True)
+            player_racks = cols[2].get_text(strip=True)
+            opponent = cols[3].get_text(strip=True)
+            opponent_racks = cols[5].get_text(strip=True)
 
-            score_match = re.match(r"(\d+)-(\d+)", score)
-            if not score_match:
+            # skip TOTALS or incomplete rows
+            if player.upper() == "TOTALS" or not player or not opponent:
                 continue
 
-            player_racks, opponent_racks = score_match.groups()
-
-            matches.append({
-                "date": date,
-                "team1": team1,
-                "team2": team2,
-                "player": player,
-                "opponent": opponent,
-                "player_racks": int(player_racks),
-                "opponent_racks": int(opponent_racks)
-            })
+            try:
+                matches.append({
+                    "date": date,
+                    "team1": team1,
+                    "team2": team2,
+                    "player": player,
+                    "opponent": opponent,
+                    "player_racks": int(player_racks),
+                    "opponent_racks": int(opponent_racks)
+                })
+            except ValueError:
+                continue  # skip rows with invalid integer conversion
 
     return matches
+
+def get_team_matches(session, scouting_url):
+    return get_match_history(session, scouting_url)

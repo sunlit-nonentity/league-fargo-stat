@@ -1,47 +1,54 @@
-import argparse
+import json
 import requests
-import os
-from dotenv import load_dotenv
+from core import auth, standings, scouting, database
 
-from core.auth import login
-from core.standings import get_standings
-from core.scouting import get_team_scouting_url, get_match_history
-from core.database import init_db, insert_players, insert_matches
+def load_config(path='config.json'):
+    with open(path, 'r') as f:
+        return json.load(f)
 
-# Load credentials
-load_dotenv()
+def main():
+    config = load_config()
 
-parser = argparse.ArgumentParser(description="LeagueStat CLI - Fetch and store Amsterdam Billiards data")
-parser.add_argument("--team", type=str, required=True, help="Your exact team name (e.g. 'Nine Of Diamonds')")
-args = parser.parse_args()
+    username = config.get('username')
+    password = config.get('password')
+    team_name = config.get('team_name')
 
-username = os.getenv("AMSTERDAM_USERNAME")
-password = os.getenv("AMSTERDAM_PASSWORD")
+    # start session
+    session = requests.Session()
 
-session = requests.Session()
-session, dashboard_html = login(session, username=username, password=password)
+    print("🔐 Logging in...")
+    logged_in = auth.login(session, username, password)
 
-if not session or not dashboard_html:
-    print("❌ Login failed. Please check your credentials.")
-    exit(1)
+    if not logged_in:
+        print("❌ Login failed. Check credentials.")
+        return
+    print("✅ Login successful.")
 
-print("✅ Login successful.")
+    # Skipping standings until implemented
+    # print("📥 Fetching player stats...")
+    # players = standings.get_players(session)
+    # database.insert_players(players, username)
+    # print(f"✅ Inserted {len(players)} players into the database.")
 
-# Initialize DB
-db = init_db()
+    # get team scouting report (match history)
+    print("📥 Fetching match history...")
 
-# Parse player standings and insert into DB
-players = get_standings(session)
-count = insert_players(db, players)
-print(f"✅ Inserted {count} players into the database.")
+    # resolve team_id from standings page using team_name
+    standings_url = "https://leagues3.amsterdambilliards.com/team9ball/abc/team_standings.php?season_id=247"
+    team_id = standings.get_team_id_from_standings(session, standings_url, team_name)
 
-# Parse match history and insert into DB
-scouting_url = get_team_scouting_url(dashboard_html, args.team)
-if not scouting_url:
-    print(f"❌ Could not find scouting link for team '{args.team}'.")
-    exit(1)
+    if not team_id:
+        print(f"❌ Could not find team_id for team '{team_name}'")
+        return
 
-matches = get_match_history(session, scouting_url)
-print(f"🧪 Found {len(matches)} matches before inserting.")
-match_count = insert_matches(db, matches)
-print(f"✅ Inserted {match_count} matches into the database.")
+    scouting_url = f"https://leagues3.amsterdambilliards.com/team9ball/abc/team_scouting_report.php?season_id=247&team_id={team_id}"
+    matches = scouting.get_team_matches(session, scouting_url)
+
+    print(f"🧪 Found {len(matches)} matches before inserting.")
+    conn = database.init_db()
+    inserted = database.insert_matches(conn, matches)
+    print(f"✅ Inserted {inserted} matches into the database.")
+
+
+if __name__ == "__main__":
+    main()
