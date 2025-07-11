@@ -1,0 +1,19 @@
+# Bytecode
+__pycache__/
+*.py[cod]
+
+# Deployment packages
+*.zip
+
+# Local config files
+.env
+.env.*
+
+# Build/install artifacts
+*.egg-info/
+*.dist-info/
+pip-wheel-metadata/
+
+# OS files
+.DS_Store
+Thumbs.db
